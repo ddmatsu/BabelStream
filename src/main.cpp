@@ -49,6 +49,10 @@
 #include "SYCLStream2020.h"
 #elif defined(OMP)
 #include "OMPStream.h"
+#elif defined(SERIAL)
+#include "SerialStream.h"
+#elif defined(FUTHARK)
+#include "FutharkStream.h"
 #endif
 
 // Default size of 2^25
@@ -297,6 +301,14 @@ void run()
 #elif defined(OMP)
   // Use the OpenMP implementation
   stream = new OMPStream<T>(ARRAY_SIZE, deviceIndex);
+
+#elif defined(SERIAL)
+  // Use the Serial implementation
+  stream = new SerialStream<T>(ARRAY_SIZE, deviceIndex);
+
+#elif defined(FUTHARK)
+  // Use the Futhark implementation
+  stream = new FutharkStream<T>(ARRAY_SIZE, deviceIndex);
 
 #endif
 
