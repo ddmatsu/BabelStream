@@ -35,6 +35,9 @@ macro(setup)
     register_definitions(${MEM})
 
     if (CUDA_CLANG_DRIVER)
+        if (CMAKE_VERSION VERSION_LESS "3.18.0")
+            message(FATAL_ERROR "Using clang driver for CUDA is only supported for CMake >= 3.18")
+        endif ()
         set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -std=c++17 --cuda-gpu-arch=${CUDA_ARCH} ${CUDA_EXTRA_FLAGS}")
     else ()
         # add -forward-unknown-to-host-compiler for compatibility reasons
