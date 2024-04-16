@@ -237,6 +237,11 @@ build_clang() {
   else
     echo "Skipping RAJA models due to CMake version requirement"
   fi
+
+  run_build $name "${CLANG_CXX:?}" cuda "$cxx -DCMAKE_CUDA_COMPILER=${CLANG_CXX:?} -DCUDA_ARCH=$NV_ARCH -DCUDA_CLANG_DRIVER=ON"
+  run_build $name "${CLANG_CXX:?}" cuda "$cxx -DCMAKE_CUDA_COMPILER=${CLANG_CXX:?} -DCUDA_ARCH=$NV_ARCH -DCUDA_CLANG_DRIVER=ON -DMEM=MANAGED"
+  run_build $name "${CLANG_CXX:?}" cuda "$cxx -DCMAKE_CUDA_COMPILER=${CLANG_CXX:?} -DCUDA_ARCH=$NV_ARCH -DCUDA_CLANG_DRIVER=ON -DMEM=PAGEFAULT"
+
   run_build $name "${CLANG_CXX:?}" cuda "$cxx -DCMAKE_CUDA_COMPILER=${NVHPC_NVCC:?} -DCUDA_ARCH=$NV_ARCH"
   run_build $name "${CLANG_CXX:?}" cuda "$cxx -DCMAKE_CUDA_COMPILER=${NVHPC_NVCC:?} -DCUDA_ARCH=$NV_ARCH -DMEM=MANAGED"
   run_build $name "${CLANG_CXX:?}" cuda "$cxx -DCMAKE_CUDA_COMPILER=${NVHPC_NVCC:?} -DCUDA_ARCH=$NV_ARCH -DMEM=PAGEFAULT"
