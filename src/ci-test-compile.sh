@@ -236,9 +236,14 @@ build_clang() {
   fi
 
   if check_cmake_ver "3.18.0"; then
-    run_build $name "${CLANG_CXX:?}" cuda "$cxx -DCMAKE_CUDA_COMPILER=${CLANG_CXX:?} -DCUDA_ARCH=$NV_ARCH -DCUDAToolkit_ROOT=${NVHPC_CUDA_DIR:?} -DCUDA_CLANG_DRIVER=ON"
-    run_build $name "${CLANG_CXX:?}" cuda "$cxx -DCMAKE_CUDA_COMPILER=${CLANG_CXX:?} -DCUDA_ARCH=$NV_ARCH -DCUDAToolkit_ROOT=${NVHPC_CUDA_DIR:?} -DCUDA_CLANG_DRIVER=ON -DMEM=MANAGED"
-    run_build $name "${CLANG_CXX:?}" cuda "$cxx -DCMAKE_CUDA_COMPILER=${CLANG_CXX:?} -DCUDA_ARCH=$NV_ARCH -DCUDAToolkit_ROOT=${NVHPC_CUDA_DIR:?} -DCUDA_CLANG_DRIVER=ON -DMEM=PAGEFAULT"
+    # make sure ptxas is on PATH so that clang can detect CUDA
+    (
+      export PATH="${NVHPC_CUDA_DIR}/bin:${PATH:?}"
+      ${CLANG_CXX:?} -v
+      run_build $name "${CLANG_CXX:?}" cuda "$cxx -DCMAKE_CUDA_COMPILER=${CLANG_CXX:?} -DCUDA_ARCH=$NV_ARCH -DCUDAToolkit_ROOT=${NVHPC_CUDA_DIR:?} -DCUDA_CLANG_DRIVER=ON"
+      run_build $name "${CLANG_CXX:?}" cuda "$cxx -DCMAKE_CUDA_COMPILER=${CLANG_CXX:?} -DCUDA_ARCH=$NV_ARCH -DCUDAToolkit_ROOT=${NVHPC_CUDA_DIR:?} -DCUDA_CLANG_DRIVER=ON -DMEM=MANAGED"
+      run_build $name "${CLANG_CXX:?}" cuda "$cxx -DCMAKE_CUDA_COMPILER=${CLANG_CXX:?} -DCUDA_ARCH=$NV_ARCH -DCUDAToolkit_ROOT=${NVHPC_CUDA_DIR:?} -DCUDA_CLANG_DRIVER=ON -DMEM=PAGEFAULT"
+    )
   else
     echo "Skipping CUDA on clang models due to CMake version requirement"
   fi
