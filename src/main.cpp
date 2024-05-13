@@ -41,7 +41,7 @@ enum class BenchId : int {Copy, Mul, Add, Triad, Nstream, Dot, Classic, All};
 struct Benchmark {
   BenchId id;
   char const* label;
-  // Weights data moved by benchmark & therefore achieved BW:
+  // Weight counts data elements of original arrays moved each loop iteration - used to calculate achieved BW:
   // bytes = weight * sizeof(T) * ARRAY_SIZE -> bw = bytes / dur
   size_t weight;
   // Is it one of: Copy, Mul, Add, Triad, Dot?
