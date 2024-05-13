@@ -4,7 +4,9 @@
 // Units for output:
 struct Unit {
   enum class Kind { MegaByte, GigaByte, TeraByte, MibiByte, GibiByte, TebiByte };
+
   Kind value;
+  
   explicit Unit(Kind v) : value(v) {}
 
   double fmt(double bytes) const {
