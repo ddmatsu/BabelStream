@@ -17,6 +17,7 @@ struct Unit {
     default: std::cerr << "Unimplemented!" << std::endl; std::abort();
     }
   }
+
   char const* str() const {
     switch(value) {
     case Kind::MibiByte: return "MiB";
