@@ -237,6 +237,7 @@ __global__ void dot_kernel(const T * a, const T * b, T* sums, int array_size)
     if (tidx < offset) smem[tidx] += smem[tidx+offset];
   }
 
+  // First thread writes to host memory directly from the device
   if (tidx == 0) sums[blockIdx.x] = smem[tidx];
 }
 
