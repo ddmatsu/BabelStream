@@ -6,6 +6,7 @@ struct Unit {
   enum class Kind { MegaByte, GigaByte, TeraByte, MibiByte, GibiByte, TebiByte };
   Kind value;
   explicit Unit(Kind v) : value(v) {}
+
   double fmt(double bytes) const {
     switch(value) {
     case Kind::MibiByte: return std::pow(2.0, -20.0) * bytes;
