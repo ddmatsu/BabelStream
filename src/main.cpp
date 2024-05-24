@@ -409,7 +409,7 @@ void parseArguments(int argc, char *argv[])
     *output = strtoull(str, &next, 10);
     return !strlen(next);
   };
-  auto parseInt =[](const char *str, intptr_t *output) {
+  auto parseInt = [](const char *str, intptr_t *output) {
     char *next;
     *output = strtoll(str, &next, 10);
     return !strlen(next);
