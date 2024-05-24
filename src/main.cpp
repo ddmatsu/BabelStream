@@ -569,7 +569,7 @@ void parseArguments(int argc, char *argv[])
       std::cout << "      --csv                Output as csv table" << std::endl;
       std::cout << "      --megabytes          Use MB=10^6 for bandwidth calculation (default)" << std::endl;
       std::cout << "      --mibibytes          Use MiB=2^20 for bandwidth calculation (default MB=10^6)" << std::endl;
-      std::cout << "      --gigibytes          Use GiB=2^30 for bandwidth calculation (default MB=10^6)" << std::endl;
+      std::cout << "      --gibibytes          Use GiB=2^30 for bandwidth calculation (default MB=10^6)" << std::endl;
       std::cout << "      --gigabytes          Use GB=10^9 for bandwidth calculation (default MB=10^6)" << std::endl;
       std::cout << "      --tebibytes          Use TiB=2^40 for bandwidth calculation (default MB=10^6)" << std::endl;
       std::cout << "      --terabytes          Use TB=10^12 for bandwidth calculation (default MB=10^6)" << std::endl;
