@@ -331,7 +331,7 @@ void check_solution(const size_t num_times,
     case BenchId::Add:     goldC = goldA + goldB; break;
     case BenchId::Triad:   goldA = goldB + scalar * goldC; break;
     case BenchId::Nstream: goldA += goldB + scalar * goldC; break;
-    case BenchId::Dot:     goldS = goldA * goldB * T(ARRAY_SIZE); break;
+    case BenchId::Dot:     goldS = goldA * goldB * T(ARRAY_SIZE); break; // This calculates the answer exactly
     default:
     std::cerr << "Unimplemented Check: " << bench[b].label << std::endl;
     abort();
