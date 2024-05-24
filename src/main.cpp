@@ -69,6 +69,12 @@ bool run_benchmark(Benchmark const& b) {
   return selection == b.id;
 }
 
+// Benchmark run order
+// - Classic: runs each bench once in the order above, and repeats n times.
+// - Isolated: runs each bench n times in isolation
+enum class BenchOrder : int {Classic, Isolated};
+BenchOrder order = BenchOrder::Classic;
+
 template <typename T>
 void run();
 
@@ -111,28 +117,55 @@ std::vector<std::vector<double>> run_all(std::unique_ptr<Stream<T>>& stream, T& 
   // Times for each measured benchmark:
   std::vector<std::vector<double>> timings(num_benchmarks);
 
-  // Time a particular benchmark:
-  auto dt = [&](Benchmark const& b)
+  // Run a particular benchmark
+  auto run = [&](Benchmark const& b)
   {
     switch(b.id) {
-    case BenchId::Copy:    return time([&] { stream->copy(); });
-    case BenchId::Mul:     return time([&] { stream->mul(); });
-    case BenchId::Add:     return time([&] { stream->add(); });
-    case BenchId::Triad:   return time([&] { stream->triad(); });
-    case BenchId::Dot:     return time([&] { sum = stream->dot(); });
-    case BenchId::Nstream: return time([&] { stream->nstream(); });
+    case BenchId::Copy:    return stream->copy();
+    case BenchId::Mul:     return stream->mul();
+    case BenchId::Add:     return stream->add();
+    case BenchId::Triad:   return stream->triad();
+    case BenchId::Dot:     sum = stream->dot(); return;
+    case BenchId::Nstream: return stream->nstream();
     default:
       std::cerr << "Unimplemented benchmark: " << b.label << std::endl;
       abort();
     }
   };
 
-  // Main loop
-  for (size_t i = 0; i < num_benchmarks; ++i)
-  {
+  // Time a particular benchmark:
+  auto dt = [&](Benchmark const& b) { return time([&] { run(b); }); };
+
+  // Reserve timings:
+  for (size_t i = 0; i < num_benchmarks; ++i) {
     if (!run_benchmark(bench[i])) continue;
     timings[i].reserve(num_times);
-    for (size_t k = 0; k < num_times; k++) timings[i].push_back(dt(bench[i]));
+  }
+
+  switch(order) {
+  // Classic runs each benchmark once in the order specifies in the "bench" array above,
+  // and then repeats num_times:
+  case BenchOrder::Classic: {
+    for (size_t k = 0; k < num_times; k++) {
+      for (size_t i = 0; i < num_benchmarks; ++i) {
+	if (!run_benchmark(bench[i])) continue;
+	timings[i].push_back(dt(bench[i]));
+      }
+    }
+    break;
+  }
+  // Isolated runs each benchmark num_times, before proceeding to run the next benchmark:
+  case BenchOrder::Isolated: {
+    for (size_t i = 0; i < num_benchmarks; ++i) {
+      if (!run_benchmark(bench[i])) continue;
+      auto t = time([&] { for (size_t k = 0; k < num_times; k++) run(bench[i]); });
+      timings[i].resize(num_times, t / (double)num_times);
+    }
+    break;
+  }
+  default:
+    std::cerr << "Unimplemented order" << std::endl;
+    abort();
   }
 
   // Compiler should use a move
@@ -290,24 +323,44 @@ void check_solution(const size_t num_times,
 
   const T scalar = startScalar;
 
-  for (size_t b = 0; b < num_benchmarks; ++b)
-  {
-    if (!run_benchmark(bench[b])) continue;
+  // Updates output due to running each benchmark:
+  auto run = [&](int b) {
+    switch(bench[b].id) {
+    case BenchId::Copy:    goldC = goldA; break;
+    case BenchId::Mul:     goldB = scalar * goldC; break;
+    case BenchId::Add:     goldC = goldA + goldB; break;
+    case BenchId::Triad:   goldA = goldB + scalar * goldC; break;
+    case BenchId::Nstream: goldA += goldB + scalar * goldC; break;
+    case BenchId::Dot:     goldS = goldA * goldB * T(ARRAY_SIZE); break;
+    default:
+    std::cerr << "Unimplemented Check: " << bench[b].label << std::endl;
+    abort();
+    }
+  };
 
-    for (size_t i = 0; i < num_times; i++)
-    {
-      switch(bench[b].id) {
-      case BenchId::Copy:    goldC = goldA; break;
-      case BenchId::Mul:     goldB = scalar * goldC; break;
-      case BenchId::Add:     goldC = goldA + goldB; break;
-      case BenchId::Triad:   goldA = goldB + scalar * goldC; break;
-      case BenchId::Nstream: goldA += goldB + scalar * goldC; break;
-      case BenchId::Dot:     goldS = goldA * goldB * T(ARRAY_SIZE); break;
-      default:
-	std::cerr << "Unimplemented Check: " << bench[b].label << std::endl;
-	abort();
+  switch(order) {
+  // Classic runs each benchmark once in the order specifies in the "bench" array above,
+  // and then repeats num_times:
+  case BenchOrder::Classic: {
+    for (size_t k = 0; k < num_times; k++) {
+      for (size_t i = 0; i < num_benchmarks; ++i) {
+	if (!run_benchmark(bench[i])) continue;
+	run(i);
       }
     }
+    break;
+  }
+  // Isolated runs each benchmark num_times, before proceeding to run the next benchmark:
+  case BenchOrder::Isolated: {
+    for (size_t i = 0; i < num_benchmarks; ++i) {
+      if (!run_benchmark(bench[i])) continue;
+      for (size_t k = 0; k < num_times; k++) run(i);
+    }
+    break;
+  }
+  default:
+    std::cerr << "Unimplemented order" << std::endl;
+    abort();
   }
 
   // Error relative tolerance check
@@ -452,6 +505,20 @@ void parseArguments(int argc, char *argv[])
         selection = p->id;
       }
     }
+    else if (!std::string("--order").compare(argv[i]))
+    {
+      if (++i >= argc)
+      {
+	std::cerr << "Expected benchmark order after --order. Options: \"classic\" (default), \"isolated\"."
+		  << std::endl;
+        exit(EXIT_FAILURE);
+      }
+      auto key = std::string(argv[i]);
+      if (key == "isolated")
+      {
+        order = BenchOrder::Isolated;
+      }
+    }
     else if (!std::string("--csv").compare(argv[i]))
     {
       output_as_csv = true;
@@ -498,6 +565,7 @@ void parseArguments(int argc, char *argv[])
       std::cout << "      --float              Use floats (rather than doubles)" << std::endl;
       std::cout << "  -o  --only       NAME    Only run one benchmark (see --print-names)" << std::endl;
       std::cout << "      --print-names        Prints all available benchmark names" << std::endl;
+      std::cout << "      --order              Benchmark run order: \"classic\" (default) or \"isolated\"." << std::endl;
       std::cout << "      --csv                Output as csv table" << std::endl;
       std::cout << "      --megabytes          Use MB=10^6 for bandwidth calculation (default)" << std::endl;
       std::cout << "      --mibibytes          Use MiB=2^20 for bandwidth calculation (default MB=10^6)" << std::endl;
