@@ -344,8 +344,8 @@ void check_solution(const size_t num_times,
   case BenchOrder::Classic: {
     for (size_t k = 0; k < num_times; k++) {
       for (size_t i = 0; i < num_benchmarks; ++i) {
-	if (!run_benchmark(bench[i])) continue;
-	run(i);
+	      if (!run_benchmark(bench[i])) continue;
+	      run(i);
       }
     }
     break;
