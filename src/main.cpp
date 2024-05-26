@@ -445,7 +445,7 @@ void parseArguments(int argc, char *argv[])
       if (++i >= argc || !parseInt(argv[i], &array_size) || array_size <= 0)
       {
         std::cerr << "Invalid array size." << std::endl;
-        exit(EXIT_FAILURE);
+        std::exit(EXIT_FAILURE);
       }
       ARRAY_SIZE = array_size;
     }
@@ -472,14 +472,14 @@ void parseArguments(int argc, char *argv[])
       std::cout << "Available benchmarks: ";
       print_labels(std::cout);
       std::cout << std::endl;
-      exit(EXIT_SUCCESS);
+      std::exit(EXIT_SUCCESS);
     }
     else if (!std::string("--only").compare(argv[i]) || !std::string("-o").compare(argv[i]))
     {
       if (++i >= argc)
       {
-	std::cerr << "Expected benchmark name after --only" << std::endl;
-        exit(EXIT_FAILURE);
+        std::cerr << "Expected benchmark name after --only" << std::endl;
+        std::exit(EXIT_FAILURE);
       }
       auto key = std::string(argv[i]);
       if (key == "Classic")
@@ -493,14 +493,14 @@ void parseArguments(int argc, char *argv[])
       else
       {
         auto p = std::find_if(bench.begin(), bench.end(), [&](Benchmark const& b) {
-	  return std::string(b.label) == key;
+          return std::string(b.label) == key;
         });
         if (p == bench.end()) {
           std::cerr << "Unknown benchmark name \"" << argv[i] << "\" after --only" << std::endl;
           std::cerr << "Available benchmarks: All, Classic,";
           print_labels(std::cerr);
           std::cerr << std::endl;
-	  std::exit(EXIT_FAILURE);
+          std::exit(EXIT_FAILURE);
         }
         selection = p->id;
       }
@@ -509,7 +509,7 @@ void parseArguments(int argc, char *argv[])
     {
       if (++i >= argc)
       {
-	std::cerr << "Expected benchmark order after --order. Options: \"classic\" (default), \"isolated\"."
+       std::cerr << "Expected benchmark order after --order. Options: \"classic\" (default), \"isolated\"."
 		  << std::endl;
         exit(EXIT_FAILURE);
       }
